@@ -716,25 +716,6 @@ lev && (
     esac
 )
 
-NO=1.3.1;     W=1; S=1; E=; SC=;  BD='Ensure AIDE is installed'
-lev && (
-    install_package aide
-    install_package aide-common
-    if  [[ ! -f /var/lib/aide/aide.db.new ]]; then
-        upd || prw "Aideinit needs to be executed." 
-        upd && prn "Executing aideinit. This could take a long time." 
-        upd && aideinit
-    fi
-)
-
-NO=1.3.2;     W=1; S=1; E=; SC=;  BD='Ensure filesystem integrity is regularly checked'
-lev && (
-    if  [[ -f /etc/cron.daily/aide ]]; then
-        prn "Aide crontab is already installed."
-    else
-        prw "Aide crontab /etc/cron.daily/aide is not installed. Fix manually."
-    fi
-)
 
 NO=1.4.1;     W=1; S=1; E=; SC=;  BD='Ensure permissions on bootloader config are not overridden'
 lev && (
