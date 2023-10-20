@@ -1731,33 +1731,6 @@ lev && ssd && (update_conf /etc/ssh/sshd_config "MaxStartups" "MaxStartups ${SSH
 NO=5.3.22;    W=1; S=1; E=; SC=;  BD='Ensure SSH MaxSessions is is limited'
 lev && ssd && (update_conf /etc/ssh/sshd_config 'MaxSessions' "MaxSessions ${SSHMAXSS}")
 
-NO=5.4.1;     W=1; S=1; E=; SC=;  BD='Ensure password creation requirements are configured'
-lev && (
-    install_package libpam-pwquality
-    update_conf /etc/pam.d/common-password "password	requisite			pam_pwquality" "password	requisite			pam_pwquality.so	retry=${PAMRETRY}"
-    update_conf /etc/security/pwquality.conf "minlen"  "minlen  = ${PAMMINLEN}"
-    update_conf /etc/security/pwquality.conf "dcredit" "dcredit = ${PAMDCREDIT}"
-    update_conf /etc/security/pwquality.conf "ucredit" "ucredit = ${PAMUCREDIT}"
-    update_conf /etc/security/pwquality.conf "ocredit" "ocredit = ${PAMOCREDIT}"
-    update_conf /etc/security/pwquality.conf "lcredit" "lcredit = ${PAMLCREDIT}"
-)
-
-NO=5.4.2;     W=1; S=1; E=; SC=;  BD='Ensure lockout for failed password attempts is configured'
-lev && (
-    update_conf /etc/pam.d/common-auth "auth	required			pam_tally2.so" "auth	required			pam_tally2.so	onerr=fail	audit	silent	deny=${PAMDENY}	unlock_time=${PAMUNLOCK}"
-    update_conf /etc/pam.d/common-account 'account	requisite			pam_deny.so'
-    update_conf /etc/pam.d/common-account 'account	required			pam_tally2.so'
-)
-
-NO=5.4.3;     W=1; S=1; E=; SC=;  BD='Ensure password reuse is limited'
-lev && (update_conf /etc/pam.d/common-password "password	required	pam_pwhistory.so" "password	required	pam_pwhistory.so	remember=${PAMHISTORY}")
-
-NO=5.4.4;     W=1; S=1; E=; SC=;  BD='Ensure password hashing algorithm is SHA-512'
-lev && (
-    grep "^password" /etc/pam.d/common-password | grep -q ${PAMENCRYPT}
-    (($? != 0)) && (update_conf /etc/pam.d/common-password 'password	\[success=1 default=ignore\]	pam_unix.so' 'password	[success=1 default=ignore]	pam_unix.so sha512')
-)
-
 # Parameter 1 = (4=mindays,5=maxdays, 6=warndays,7=inactive)
 NO=5.5.1.1;   W=1; S=1; E=; SC=;  BD='Ensure minimum days between password changes is configured'
 lev && (
@@ -1817,13 +1790,6 @@ lev && (
     err     || prn "Root account has group ID 0."
 )
 
-NO=5.5.4;     W=1; S=1; E=; SC=;  BD='Ensure default user umask is 027 or more restrictive'
-lev && (
-    update_conf /etc/pam.d/common-session 'session	optional			pam_umask.so'
-    update_conf /etc/login.defs 'UMASK' 'UMASK	027'
-    update_conf /etc/login.defs 'USERGROUPS_ENAB' 'USERGROUPS_ENAB	no'
-)
-
 NO=5.5.5;     W=1; S=1; E=; SC=;  BD='Ensure default user shell timeout is 900 seconds or less'
 lev && (
     update_conf /etc/profile     "readonly TMOUT" "readonly TMOUT=${CISTMOUT} ; export TMOUT"
@@ -1842,22 +1808,6 @@ lev && (
     fi
 )
 
-NO=5.7;       W=1; S=1; E=; SC=;  BD='Ensure access to the su command is restricted'
-lev && (
-    update_conf /etc/pam.d/su "auth	required			pam_wheel.so" "auth	required			pam_wheel.so	use_uid	group=${SUGROUP}"
-    grep -q ^${SUGROUP} /etc/group
-    case $? in
-        0)  prn "Group ${SUGROUP} already exists in /etc/group." 
-            grep ${SUGROUP} /etc/group | cut -d: -f4 | grep -i '[a-z]'
-            case $? in
-                0)  prw "Group ${SUGROUP} contains user accounts. It should be empty." ;;
-                *)  prn "Group ${SUGROUP} does not contains any users." ;;
-            esac ;;
-        *)  upd || prw "Group ${SUGROUP} needs to be added to /etc/group." 
-            upd && prw "Adding Group ${SUGROUP} to /etc/group." 
-            upd && groupadd ${SUGROUP} ;;
-    esac
-)
 
 NO=6.1.1;     W=2; S=2; E=; SC=N; BD='Audit system file permissions'
 lev && (
